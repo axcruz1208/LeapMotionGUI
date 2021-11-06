@@ -1,11 +1,12 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QGridLayout, \
     QScrollArea, QDialog, QStackedWidget
-from PyQt5.QtGui import QPixmap, QCursor
-from PyQt5 import QtCore
+from PyQt5.QtGui import QPixmap, QCursor, QMouseEvent
+from PyQt5 import QtCore, QtTest
 import Leap, _thread, time
 from Leap import CircleGesture, KeyTapGesture, ScreenTapGesture, SwipeGesture
 import threading
+import mouse
 
 """
 Clase que nos crea una especie de tarjeta para almacenar las clases/tutorias/conferencia que vamos a tener
@@ -91,7 +92,7 @@ class MainFrame(QDialog):
         )
 
         #Botón de Brújula
-        button3 = QPushButton("Brújula")
+        button3 = QPushButton("EXIT")
         button3.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
         button3.setStyleSheet(
             "*{border: 4px solid '#BC006C';" +
@@ -206,24 +207,24 @@ class SampleListener(Leap.Listener):
         for hand in frame.hands:
 
             handType = "Left hand" if hand.is_left else "Right hand"
-
             print ("  %s, id %d, position: %s" % (handType, hand.id, hand.palm_position))
 
-            if(handType == "Right hand"):
-                current_cursor.setPos(int(((hand.palm_position.x + 250) / 500) * 1920), (int(((hand.palm_position.y) / 400) * 1080)-1200)*-1)
+            #Obtenemos los distintos dedos de la mano
+            thumb = hand.fingers[0]
+            index = hand.fingers[1]
+            middle = hand.fingers[2]
+            ring = hand.fingers[3]
+            little = hand.fingers[4]
+
+            x_position = int(((index.tip_position.x + 175) / 350) * 1920)
+            y_position = (int(((index.tip_position.y-100) / 200) * 1080)-1080)*-1
+
+            if index.is_extended and not(middle.is_extended) and not(thumb.is_extended) and not(ring.is_extended) and not(little.is_extended):
+                current_cursor.setPos(x_position, y_position)
                 app.setOverrideCursor(current_cursor)
 
-            # Get the hand's normal vector and direction
-            normal = hand.palm_normal
-            direction = hand.direction
-
-            # Calculate the hand's pitch, roll, and yaw angles
-            print ("  pitch: %f degrees, roll: %f degrees, yaw: %f degrees" % (
-                direction.pitch * Leap.RAD_TO_DEG,
-                normal.roll * Leap.RAD_TO_DEG,
-                direction.yaw * Leap.RAD_TO_DEG))
-
-
+                if (index.tip_velocity[2] < -400 and x_position > 114 and x_position < 849 and y_position > 583 and y_position < 724):
+                    window.setCurrentIndex(window.currentIndex()+1)
 
         if not (frame.hands.is_empty and frame.gestures().is_empty):
             print ("")
