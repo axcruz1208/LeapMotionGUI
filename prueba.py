@@ -32,30 +32,36 @@ class CardView(QWidget):
         super(CardView, self).__init__(*args, **kwargs)
 
         #Imagen con sus propiedades
-        lessonImage = QPixmap(image)
-        lessonImage = lessonImage.scaled(size, size)
-        cardViewImage = QLabel()
-        cardViewImage.setPixmap(lessonImage)
+        self.lessonImage = QPixmap(image)
+        self.lessonImage = self.lessonImage.scaled(size, size)
+        self.cardViewImage = QLabel()
+        self.cardViewImage.setPixmap(self.lessonImage)
 
         #Información sobre la clase en cuestión
-        name = QLabel(name)
-        name.setFont(QFont('Times', size/10))
-        name.setStyleSheet("color: '#ECE5EC';" + "margin-right: 150px;")
-        information = QLabel(information)
-        information.setFont(QFont('Times', size/20))
+        self.name = QLabel(name)
+        self.name.setFont(QFont('Times', int(size/10)))
+        self.name.setStyleSheet("color: '#ECE5EC';" + "margin-right: 150px;")
+        self.information = QLabel(information)
+        self.information.setFont(QFont('Times', int(size/20)))
 
         #Layout vertical que almacena la información
         verticalLayout = QVBoxLayout()
-        verticalLayout.addWidget(name)
-        verticalLayout.addWidget(information)
+        verticalLayout.addWidget(self.name)
+        verticalLayout.addWidget(self.information)
 
         #Layout horizontal que almacena imagen y layout vertical
         layout = QHBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignCenter)
-        layout.addWidget(cardViewImage)
+        layout.addWidget(self.cardViewImage)
         layout.addLayout(verticalLayout)
 
         self.setLayout(layout)
+
+    def changeParameters(self, image, name, information):
+            self.lessonImage.load(image)
+            self.cardViewImage.setPixmap(self.lessonImage)
+            self.name.setText(name)
+            self.information.setText(information)
 
 
 """
@@ -214,7 +220,7 @@ class ScheduleFrame(QDialog):
 
         #Creamos los distintos eventos del horario
         empty = CardView("empty.png", "", "", 175)
-        lesson1 = CardView("VC.png", "Visión por Computador (Teoría)", "Aula: 1.7\nHora: 8:30-10:30\nProfesor: Nicolás Pérez de la Blanca Capilla", 350)
+        self.lesson1 = CardView("VC.png", "Visión por Computador (Teoría)", "Aula: 1.7\nHora: 8:30-10:30\nProfesor: Nicolás Pérez de la Blanca Capilla", 350)
         lesson2 = CardView("VC.png", "Visión por Computador (Practicas)", "Aula: 3.7\nHora: 10:30-12:30\nProfesor: Nicolás Pérez de la Blanca Capilla", 175)
         lesson3 = CardView("RSC.png", "Procesadores de Lenguajes (Practicas)", "Aula: 0.8\nHora: 12:30-14:30\nProfesor: Ramón López-Cózar Delgado", 175)
         lesson4 = CardView("tutoria.png", "Tutoría (Visión por Computador)", "Aula: 1.7\nHora: 13:30-17:30\nProfesor: Nicolás Pérez de la Blanca Capilla", 100)
@@ -223,7 +229,7 @@ class ScheduleFrame(QDialog):
         self.scrollArea.addWidget(UA, 0,0)
         self.scrollArea.addWidget(empty,1,0)
         self.scrollArea.addWidget(separator_horizontal,2,0)
-        self.scrollArea.addWidget(lesson1,3,0)
+        self.scrollArea.addWidget(self.lesson1,3,0)
         self.scrollArea.addWidget(separator_horizontal2,4,0)
         self.scrollArea.addWidget(lesson3,5,0)
         self.scrollArea.addWidget(DA,6,0)
@@ -244,17 +250,16 @@ class ScheduleFrame(QDialog):
         #Enlazamos el layout principal con la clase QDialog
         self.setLayout(verticalLayout)
 
-    def deleteActualLesson(self):
-        self.scrollArea.itemAt(3).widget().deleteLater()
-
-    def addActualLesson(self):
-        lesson5 = CardView("conference.png", "Conferencia (Ciberseguridad)","Aula: 0.3\nHora: 19:30-20:30\nPonente: Patricia Díez Muñoz", 350)
-        self.scrollArea.addWidget(lesson5,2,0)
+    def changeCardView(self):
+        self.lesson1.changeParameters(lista_images[contador], lista_names[contador], lista_info[contador])
 
 class SampleListener(Leap.Listener):
     finger_names = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
     bone_names = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
     state_names = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
+    timer = 0
+    ultimoSwipe = 300
+    diferencia = 25
 
     def on_init(self, controller):
         print("Initialized")
@@ -279,7 +284,14 @@ class SampleListener(Leap.Listener):
         # Get the most recent frame and report some basic information
         global is_gesturing
         global schedule
+        global contador
+
         frame = controller.frame()
+
+        if((self.timer - self.ultimoSwipe)%157 == self.diferencia):
+            self.ultimoSwipe = 300
+
+        self.timer = (self.timer+1) % 157
 
         print("Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
               frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures())))
@@ -331,13 +343,20 @@ class SampleListener(Leap.Listener):
                 app.setOverrideCursor(gesture_cursor)
                 is_gesturing = True
 
+                frameAnterior = controller.frame(1)
+                print(hand.palm_velocity[1])
                 #Swipe
-                if (hand.palm_velocity[1] < -400):
-                    schedule.deleteActualLesson()
-                    print("SWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\n")
-                elif(hand.palm_velocity[1] > 400):
-                    schedule.addActualLesson()
-                    print("SWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\n")
+                if((self.timer - self.ultimoSwipe) % 157 > self.diferencia):
+                    if (hand.palm_velocity[1] < -400):
+                        contador = (contador+1) % len(lista_images)
+                        schedule.changeCardView()
+                        self.ultimoSwipe = self.timer
+                        print("SWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\n")
+                    elif(hand.palm_velocity[1] > 400):
+                        contador = (contador-1) % len(lista_images)
+                        schedule.changeCardView()
+                        self.ultimoSwipe = self.timer
+                        print("SWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\n")
 
             #Gesto para volver a la pestaña anterior
             if(is_gesturing and window.currentIndex() == 2 and not(index.is_extended) and not(middle.is_extended) and not(thumb.is_extended) and not(ring.is_extended) and not(little.is_extended)):
@@ -375,9 +394,16 @@ def main():
         controller.remove_listener(listener)
 
 
+
+
 #Creamos la aplicación y variables globales
 app = QApplication(sys.argv)
+
 is_gesturing = False
+contador = 0
+lista_images = ["VC.png", "RSC.png", "tutoria.png"]
+lista_names = ["Visión por Computador (Practicas)", "Procesadores de Lenguajes (Practicas)", "Tutoría (Visión por Computador)"]
+lista_info = ["Aula: 3.7\nHora: 10:30-12:30\nProfesor: Nicolás Pérez de la Blanca Capilla", "Aula: 0.8\nHora: 12:30-14:30\nProfesor: Ramón López-Cózar Delgado","Aula: 1.7\nHora: 13:30-17:30\nProfesor: Nicolás Pérez de la Blanca Capilla"]
 
 #Ponemos a ejecutar el listener en segundo plano ( en la terminal )
 download_thread = threading.Thread(target=main, name="MainFunction")
