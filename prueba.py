@@ -57,8 +57,9 @@ class CardView(QWidget):
 
         self.setLayout(layout)
 
-    def changeParameters(self, image, name, information):
+    def changeParameters(self, image, name, information, size):
             self.lessonImage.load(image)
+            self.lessonImage = self.lessonImage.scaled(size, size)
             self.cardViewImage.setPixmap(self.lessonImage)
             self.name.setText(name)
             self.information.setText(information)
@@ -219,19 +220,17 @@ class ScheduleFrame(QDialog):
         DA.setAlignment(QtCore.Qt.AlignCenter)
 
         #Creamos los distintos eventos del horario
-        empty = CardView("empty.png", "", "", 175)
-        self.lesson1 = CardView("VC.png", "Visión por Computador (Teoría)", "Aula: 1.7\nHora: 8:30-10:30\nProfesor: Nicolás Pérez de la Blanca Capilla", 350)
-        lesson2 = CardView("VC.png", "Visión por Computador (Practicas)", "Aula: 3.7\nHora: 10:30-12:30\nProfesor: Nicolás Pérez de la Blanca Capilla", 175)
-        lesson3 = CardView("RSC.png", "Procesadores de Lenguajes (Practicas)", "Aula: 0.8\nHora: 12:30-14:30\nProfesor: Ramón López-Cózar Delgado", 175)
-        lesson4 = CardView("tutoria.png", "Tutoría (Visión por Computador)", "Aula: 1.7\nHora: 13:30-17:30\nProfesor: Nicolás Pérez de la Blanca Capilla", 100)
+        self.lesson1 = CardView("empty.png", "", "", 175)
+        self.lesson2 = CardView("VC.png", "Visión por Computador (Teoría)", "Aula: 1.7\nHora: 8:30-10:30\nProfesor: Nicolás Pérez de la Blanca Capilla", 350)
+        self.lesson3 = CardView("VC.png", "Visión por Computador (Practicas)", "Aula: 3.7\nHora: 10:30-12:30\nProfesor: Nicolás Pérez de la Blanca Capilla", 175)
 
         #Añadimos dichos eventos al layout
         self.scrollArea.addWidget(UA, 0,0)
-        self.scrollArea.addWidget(empty,1,0)
+        self.scrollArea.addWidget(self.lesson1,1,0)
         self.scrollArea.addWidget(separator_horizontal,2,0)
-        self.scrollArea.addWidget(self.lesson1,3,0)
+        self.scrollArea.addWidget(self.lesson2,3,0)
         self.scrollArea.addWidget(separator_horizontal2,4,0)
-        self.scrollArea.addWidget(lesson3,5,0)
+        self.scrollArea.addWidget(self.lesson3,5,0)
         self.scrollArea.addWidget(DA,6,0)
 
         #Añadimos el scrollArea al layout principal
@@ -251,7 +250,9 @@ class ScheduleFrame(QDialog):
         self.setLayout(verticalLayout)
 
     def changeCardView(self):
-        self.lesson1.changeParameters(lista_images[contador], lista_names[contador], lista_info[contador])
+        self.lesson1.changeParameters(lista_images[contador], lista_names[contador], lista_info[contador], 175)
+        self.lesson2.changeParameters(lista_images[contador+1], lista_names[contador+1], lista_info[contador+1], 350)
+        self.lesson3.changeParameters(lista_images[contador+2], lista_names[contador+2], lista_info[contador+2], 175)
 
 class SampleListener(Leap.Listener):
     finger_names = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
@@ -259,7 +260,7 @@ class SampleListener(Leap.Listener):
     state_names = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
     timer = 0
     ultimoSwipe = 300
-    diferencia = 25
+    diferencia = 40
 
     def on_init(self, controller):
         print("Initialized")
@@ -268,10 +269,10 @@ class SampleListener(Leap.Listener):
         print("Connected")
 
         # Enable gestures
-        controller.enable_gesture(Leap.Gesture.TYPE_CIRCLE);
-        controller.enable_gesture(Leap.Gesture.TYPE_KEY_TAP);
-        controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP);
-        controller.enable_gesture(Leap.Gesture.TYPE_SWIPE);
+        controller.enable_gesture(Leap.Gesture.TYPE_CIRCLE)
+        controller.enable_gesture(Leap.Gesture.TYPE_KEY_TAP)
+        controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP)
+        controller.enable_gesture(Leap.Gesture.TYPE_SWIPE)
 
     def on_disconnect(self, controller):
         # Note: not dispatched when running in a debugger.
@@ -343,20 +344,16 @@ class SampleListener(Leap.Listener):
                 app.setOverrideCursor(gesture_cursor)
                 is_gesturing = True
 
-                frameAnterior = controller.frame(1)
-                print(hand.palm_velocity[1])
                 #Swipe
                 if((self.timer - self.ultimoSwipe) % 157 > self.diferencia):
                     if (hand.palm_velocity[1] < -400):
-                        contador = (contador+1) % len(lista_images)
+                        contador = (contador-1) % (len(lista_images)-2)
                         schedule.changeCardView()
                         self.ultimoSwipe = self.timer
-                        print("SWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\n")
                     elif(hand.palm_velocity[1] > 400):
-                        contador = (contador-1) % len(lista_images)
+                        contador = (contador+1) % (len(lista_images)-2)
                         schedule.changeCardView()
                         self.ultimoSwipe = self.timer
-                        print("SWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\n")
 
             #Gesto para volver a la pestaña anterior
             if(is_gesturing and window.currentIndex() == 2 and not(index.is_extended) and not(middle.is_extended) and not(thumb.is_extended) and not(ring.is_extended) and not(little.is_extended)):
@@ -401,9 +398,10 @@ app = QApplication(sys.argv)
 
 is_gesturing = False
 contador = 0
-lista_images = ["VC.png", "RSC.png", "tutoria.png"]
-lista_names = ["Visión por Computador (Practicas)", "Procesadores de Lenguajes (Practicas)", "Tutoría (Visión por Computador)"]
-lista_info = ["Aula: 3.7\nHora: 10:30-12:30\nProfesor: Nicolás Pérez de la Blanca Capilla", "Aula: 0.8\nHora: 12:30-14:30\nProfesor: Ramón López-Cózar Delgado","Aula: 1.7\nHora: 13:30-17:30\nProfesor: Nicolás Pérez de la Blanca Capilla"]
+lista_images = ["empty.png","VC.png", "VC.png", "RSC.png", "tutoria.png","conference.png","empty.png"]
+lista_names = ["","Visión por Computador (Teoría)","Visión por Computador (Practicas)", "Procesadores de Lenguajes (Practicas)", "Tutoría (Visión por Computador)", "Conferencia (Ciberseguridad)",""]
+lista_info = ["","Aula: 1.7\nHora: 8:30-10:30\nProfesor: Nicolás Pérez de la Blanca Capilla","Aula: 3.7\nHora: 10:30-12:30\nProfesor: Nicolás Pérez de la Blanca Capilla", "Aula: 2.8\nHora: 12:30-14:30\nProfesor: Ramón López-Cózar Delgado",
+              "Aula: 1.7\nHora: 13:30-17:30\nProfesor: Nicolás Pérez de la Blanca Capilla","Aula: 0.3\nHora: 19:30-20:30\nPonente: Patricia Díez Muñoz", ""]
 
 #Ponemos a ejecutar el listener en segundo plano ( en la terminal )
 download_thread = threading.Thread(target=main, name="MainFunction")
