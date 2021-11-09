@@ -1,13 +1,14 @@
 import sys
 import threading
 import time
+import random
 
 from PyQt5 import QtCore
 from PyQt5.QtGui import QPixmap, QCursor, QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QGridLayout, \
     QScrollArea, QDialog, QStackedWidget, QFrame, QSizePolicy
 
-import Leap
+#import Leap
 
 class QHSeperationLine(QFrame):
   '''
@@ -17,7 +18,7 @@ class QHSeperationLine(QFrame):
     super().__init__()
     self.setMinimumWidth(1)
     self.setFixedHeight(5)
-    self.setStyleSheet("background: '#ECE5EC';")
+    self.setStyleSheet("background: '#ECE5EC';" + "color: '#ECE5EC';")
     self.setFrameShape(QFrame.HLine)
     self.setFrameShadow(QFrame.Sunken)
     self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
@@ -32,30 +33,112 @@ class CardView(QWidget):
         super(CardView, self).__init__(*args, **kwargs)
 
         #Imagen con sus propiedades
-        lessonImage = QPixmap(image)
-        lessonImage = lessonImage.scaled(size, size)
-        cardViewImage = QLabel()
-        cardViewImage.setPixmap(lessonImage)
+        self.lessonImage = QPixmap(image)
+        self.lessonImage = self.lessonImage.scaled(size, size)
+        self.cardViewImage = QLabel()
+        self.cardViewImage.setPixmap(self.lessonImage)
 
         #Información sobre la clase en cuestión
-        name = QLabel(name)
-        name.setFont(QFont('Times', size/10))
-        name.setStyleSheet("color: '#ECE5EC';" + "margin-right: 150px;")
-        information = QLabel(information)
-        information.setFont(QFont('Times', size/20))
+        self.name = QLabel(name)
+        self.name.setFont(QFont('Times', int(size/10)))
+        self.name.setStyleSheet("color: '#ECE5EC';" + "margin-right: 150px;")
+        self.information = QLabel(information)
+        self.information.setFont(QFont('Times', int(size/20)))
 
         #Layout vertical que almacena la información
         verticalLayout = QVBoxLayout()
-        verticalLayout.addWidget(name)
-        verticalLayout.addWidget(information)
+        verticalLayout.addWidget(self.name)
+        verticalLayout.addWidget(self.information)
 
         #Layout horizontal que almacena imagen y layout vertical
         layout = QHBoxLayout()
         layout.setAlignment(QtCore.Qt.AlignCenter)
-        layout.addWidget(cardViewImage)
+        layout.addWidget(self.cardViewImage)
         layout.addLayout(verticalLayout)
 
         self.setLayout(layout)
+
+    def changeParameters(self, image, name, information, size):
+            self.lessonImage.load(image)
+            self.lessonImage = self.lessonImage.scaled(size, size)
+            self.cardViewImage.setPixmap(self.lessonImage)
+            self.name.setText(name)
+            self.information.setText(information)
+
+
+"""
+Clase que crea el frame que muestra la ocupación de la biblioteca y comedor
+"""
+class OcupacionFrame(QDialog):
+    def __init__(self):
+        super(OcupacionFrame, self).__init__()
+
+        # OcupacionFrame layouts
+        box1 = QHBoxLayout()
+        box2 = QHBoxLayout()
+        verticalLayout = QVBoxLayout()
+
+
+        #Logo
+        #image = QPixmap("logo2.png")
+        #logo = QLabel()
+        #logo.setPixmap(image)
+        #logo.setAlignment(QtCore.Qt.AlignCenter)
+        #logo.setStyleSheet("margin-top: 20px;")
+
+        #Label para el titulo
+        titulo = QLabel()
+        titulo.setText("Ocupación")
+        titulo.setAlignment(QtCore.Qt.AlignCenter)
+        titulo.setFont(QFont('SansSerif', 75))
+        titulo.setStyleSheet("color: '#ECE5EC';")
+
+        #Información sobre la ocupacion en la biblioteca
+        name = QLabel("Biblioteca: ")
+        name.setFont(QFont('Times', 35))
+        name.setStyleSheet("color: '#ECE5EC';" + "margin-left: 150px;")
+        information = QLabel(str(random.randint(0,200)))
+        information.setFont(QFont('Times', 35/2))
+        information.setStyleSheet("color: '#ECE5EC';" + "margin-right: 150px;")
+
+        #Introducimos la ocupación de la biblioteca en el primer grid
+        box1.addWidget(name)
+        box1.addWidget(information)
+        #box1.setStyleSheet("margin-right: 150px;" + "margin-left: 160px")
+
+        #Información sobre la ocupacion en el comedor
+        name = QLabel("Comedor: ")
+        name.setFont(QFont('Times', 35))
+        name.setStyleSheet("color: '#ECE5EC';" + "margin-left: 150px;")
+        information = QLabel(str(random.randint(0,200)))
+        information.setFont(QFont('Times', 35/2))
+        information.setStyleSheet("color: '#ECE5EC';" + "margin-right: 150px;")
+
+        #Introducimos la ocupación de la biblioteca en el primer grid
+        box2.addWidget(name)
+        box2.addWidget(information)
+        #box2.setStyleSheet("margin-right: 150px;" + "margin-left: 160px")
+
+        
+        separator1 = QHSeperationLine()
+        separator1.setStyleSheet("margin-right: 150px;" + "margin-left: 160px")
+        separator2 = QHSeperationLine()
+        separator2.setStyleSheet("margin-right: 150px;" + "margin-left: 160px")
+
+
+
+        #Añadimos los distintos elementos s los layouts
+        #grid.addWidget(button1, 0, 0)
+        #grid.addWidget(button2, 0, 1)
+        verticalLayout.addWidget(titulo)
+        verticalLayout.addWidget(separator1)
+        verticalLayout.addLayout(box1)
+        verticalLayout.addWidget(separator2)
+        verticalLayout.addLayout(box2)
+        #verticalLayout.addWidget(button3)
+
+        #Enlazamos el layout principal con la clase QDialog
+        self.setLayout(verticalLayout)
 
 
 """
@@ -93,7 +176,7 @@ class MainFrame(QDialog):
         button1.clicked.connect(self.gotoScheduleFrame)
 
         #Botón de Mapa
-        button2 = QPushButton("Mapa")
+        button2 = QPushButton("Ocupación")
         button2.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
         button2.setStyleSheet(
             "*{border: 4px solid '#BC006C';" +
@@ -104,6 +187,9 @@ class MainFrame(QDialog):
             "margin: 50px 100px;}"+
             "*:hover{background: '#BC006C';}"
         )
+
+        #Conectar este botón con el frame de horario
+        button2.clicked.connect(self.gotoOcupacionFrame)
 
         #Botón de Brújula
         button3 = QPushButton("Salir")
@@ -133,6 +219,9 @@ class MainFrame(QDialog):
     """
     def gotoScheduleFrame(self):
         window.setCurrentIndex(window.currentIndex()+2)
+
+    def gotoOcupacionFrame(self):
+        window.setCurrentIndex(window.currentIndex()+3)
 
 """
 Clase que crea el frame del horario que nos muestra eventos cercanos de relevancia (clases, tutorías, etc)
@@ -213,19 +302,17 @@ class ScheduleFrame(QDialog):
         DA.setAlignment(QtCore.Qt.AlignCenter)
 
         #Creamos los distintos eventos del horario
-        empty = CardView("empty.png", "", "", 175)
-        lesson1 = CardView("VC.png", "Visión por Computador (Teoría)", "Aula: 1.7\nHora: 8:30-10:30\nProfesor: Nicolás Pérez de la Blanca Capilla", 350)
-        lesson2 = CardView("VC.png", "Visión por Computador (Practicas)", "Aula: 3.7\nHora: 10:30-12:30\nProfesor: Nicolás Pérez de la Blanca Capilla", 175)
-        lesson3 = CardView("RSC.png", "Procesadores de Lenguajes (Practicas)", "Aula: 0.8\nHora: 12:30-14:30\nProfesor: Ramón López-Cózar Delgado", 175)
-        lesson4 = CardView("tutoria.png", "Tutoría (Visión por Computador)", "Aula: 1.7\nHora: 13:30-17:30\nProfesor: Nicolás Pérez de la Blanca Capilla", 100)
+        self.lesson1 = CardView("empty.png", "", "", 175)
+        self.lesson2 = CardView("VC.png", "Visión por Computador (Teoría)", "Aula: 1.7\nHora: 8:30-10:30\nProfesor: Nicolás Pérez de la Blanca Capilla", 350)
+        self.lesson3 = CardView("VC.png", "Visión por Computador (Practicas)", "Aula: 3.7\nHora: 10:30-12:30\nProfesor: Nicolás Pérez de la Blanca Capilla", 175)
 
         #Añadimos dichos eventos al layout
         self.scrollArea.addWidget(UA, 0,0)
-        self.scrollArea.addWidget(empty,1,0)
+        self.scrollArea.addWidget(self.lesson1,1,0)
         self.scrollArea.addWidget(separator_horizontal,2,0)
-        self.scrollArea.addWidget(lesson1,3,0)
+        self.scrollArea.addWidget(self.lesson2,3,0)
         self.scrollArea.addWidget(separator_horizontal2,4,0)
-        self.scrollArea.addWidget(lesson3,5,0)
+        self.scrollArea.addWidget(self.lesson3,5,0)
         self.scrollArea.addWidget(DA,6,0)
 
         #Añadimos el scrollArea al layout principal
@@ -244,17 +331,18 @@ class ScheduleFrame(QDialog):
         #Enlazamos el layout principal con la clase QDialog
         self.setLayout(verticalLayout)
 
-    def deleteActualLesson(self):
-        self.scrollArea.itemAt(3).widget().deleteLater()
-
-    def addActualLesson(self):
-        lesson5 = CardView("conference.png", "Conferencia (Ciberseguridad)","Aula: 0.3\nHora: 19:30-20:30\nPonente: Patricia Díez Muñoz", 350)
-        self.scrollArea.addWidget(lesson5,2,0)
+    def changeCardView(self):
+        self.lesson1.changeParameters(lista_images[contador], lista_names[contador], lista_info[contador], 175)
+        self.lesson2.changeParameters(lista_images[contador+1], lista_names[contador+1], lista_info[contador+1], 350)
+        self.lesson3.changeParameters(lista_images[contador+2], lista_names[contador+2], lista_info[contador+2], 175)
 
 class SampleListener(Leap.Listener):
     finger_names = ['Thumb', 'Index', 'Middle', 'Ring', 'Pinky']
     bone_names = ['Metacarpal', 'Proximal', 'Intermediate', 'Distal']
     state_names = ['STATE_INVALID', 'STATE_START', 'STATE_UPDATE', 'STATE_END']
+    timer = 0
+    ultimoSwipe = 300
+    diferencia = 40
 
     def on_init(self, controller):
         print("Initialized")
@@ -263,10 +351,10 @@ class SampleListener(Leap.Listener):
         print("Connected")
 
         # Enable gestures
-        controller.enable_gesture(Leap.Gesture.TYPE_CIRCLE);
-        controller.enable_gesture(Leap.Gesture.TYPE_KEY_TAP);
-        controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP);
-        controller.enable_gesture(Leap.Gesture.TYPE_SWIPE);
+        controller.enable_gesture(Leap.Gesture.TYPE_CIRCLE)
+        controller.enable_gesture(Leap.Gesture.TYPE_KEY_TAP)
+        controller.enable_gesture(Leap.Gesture.TYPE_SCREEN_TAP)
+        controller.enable_gesture(Leap.Gesture.TYPE_SWIPE)
 
     def on_disconnect(self, controller):
         # Note: not dispatched when running in a debugger.
@@ -279,7 +367,14 @@ class SampleListener(Leap.Listener):
         # Get the most recent frame and report some basic information
         global is_gesturing
         global schedule
+        global contador
+
         frame = controller.frame()
+
+        if((self.timer - self.ultimoSwipe)%157 == self.diferencia):
+            self.ultimoSwipe = 300
+
+        self.timer = (self.timer+1) % 157
 
         print("Frame id: %d, timestamp: %d, hands: %d, fingers: %d, tools: %d, gestures: %d" % (
               frame.id, frame.timestamp, len(frame.hands), len(frame.fingers), len(frame.tools), len(frame.gestures())))
@@ -332,12 +427,15 @@ class SampleListener(Leap.Listener):
                 is_gesturing = True
 
                 #Swipe
-                if (hand.palm_velocity[1] < -400):
-                    schedule.deleteActualLesson()
-                    print("SWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\nSWIPE ABAJO\n")
-                elif(hand.palm_velocity[1] > 400):
-                    schedule.addActualLesson()
-                    print("SWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\nSWIPE ARRIBA\n")
+                if((self.timer - self.ultimoSwipe) % 157 > self.diferencia):
+                    if (hand.palm_velocity[1] < -400):
+                        contador = (contador-1) % (len(lista_images)-2)
+                        schedule.changeCardView()
+                        self.ultimoSwipe = self.timer
+                    elif(hand.palm_velocity[1] > 400):
+                        contador = (contador+1) % (len(lista_images)-2)
+                        schedule.changeCardView()
+                        self.ultimoSwipe = self.timer
 
             #Gesto para volver a la pestaña anterior
             if(is_gesturing and window.currentIndex() == 2 and not(index.is_extended) and not(middle.is_extended) and not(thumb.is_extended) and not(ring.is_extended) and not(little.is_extended)):
@@ -370,14 +468,22 @@ def main():
         sys.stdin.readline()
     except KeyboardInterrupt:
         pass
-    finally:
+    #finally:
         # Remove the sample listener when done
-        controller.remove_listener(listener)
+        # controller.remove_listener(listener)
+
+
 
 
 #Creamos la aplicación y variables globales
 app = QApplication(sys.argv)
+
 is_gesturing = False
+contador = 0
+lista_images = ["empty.png","VC.png", "VC.png", "RSC.png", "tutoria.png","conference.png","empty.png"]
+lista_names = ["","Visión por Computador (Teoría)","Visión por Computador (Practicas)", "Procesadores de Lenguajes (Practicas)", "Tutoría (Visión por Computador)", "Conferencia (Ciberseguridad)",""]
+lista_info = ["","Aula: 1.7\nHora: 8:30-10:30\nProfesor: Nicolás Pérez de la Blanca Capilla","Aula: 3.7\nHora: 10:30-12:30\nProfesor: Nicolás Pérez de la Blanca Capilla", "Aula: 2.8\nHora: 12:30-14:30\nProfesor: Ramón López-Cózar Delgado",
+              "Aula: 1.7\nHora: 13:30-17:30\nProfesor: Nicolás Pérez de la Blanca Capilla","Aula: 0.3\nHora: 19:30-20:30\nPonente: Patricia Díez Muñoz", ""]
 
 #Ponemos a ejecutar el listener en segundo plano ( en la terminal )
 download_thread = threading.Thread(target=main, name="MainFunction")
@@ -387,6 +493,7 @@ download_thread.start()
 mainWindow = MainFrame()
 election = ElectionFrame()
 schedule = ScheduleFrame()
+ocupacion = OcupacionFrame()
 
 #Creamos la ventana
 window = QStackedWidget()
@@ -410,6 +517,7 @@ gesture_cursor = QCursor(cursor_scaled_pix, -1, -1)
 window.addWidget(mainWindow)
 window.addWidget(election)
 window.addWidget(schedule)
+window.addWidget(ocupacion)
 window.show()
 
 sys.exit(app.exec())
