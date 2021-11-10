@@ -1,14 +1,13 @@
 import sys
 import threading
 import time
-import random
 
 from PyQt5 import QtCore
 from PyQt5.QtGui import QPixmap, QCursor, QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QGridLayout, \
     QScrollArea, QDialog, QStackedWidget, QFrame, QSizePolicy
 
-#import Leap
+import Leap
 
 class QHSeperationLine(QFrame):
   '''
@@ -78,52 +77,44 @@ class OcupacionFrame(QDialog):
         box2 = QHBoxLayout()
         verticalLayout = QVBoxLayout()
 
-
-        #Logo
-        #image = QPixmap("logo2.png")
-        #logo = QLabel()
-        #logo.setPixmap(image)
-        #logo.setAlignment(QtCore.Qt.AlignCenter)
-        #logo.setStyleSheet("margin-top: 20px;")
-
         #Label para el titulo
         titulo = QLabel()
         titulo.setText("Ocupación")
         titulo.setAlignment(QtCore.Qt.AlignCenter)
-        titulo.setFont(QFont('SansSerif', 75))
+        titulo.setFont(QFont('Times', 95))
         titulo.setStyleSheet("color: '#ECE5EC';")
 
         #Información sobre la ocupacion en la biblioteca
         name = QLabel("Biblioteca: ")
-        name.setFont(QFont('Times', 35))
+        name.setFont(QFont('Times', 75))
         name.setStyleSheet("color: '#ECE5EC';" + "margin-left: 150px;")
         information = QLabel(str(random.randint(0,200)))
-        information.setFont(QFont('Times', 35/2))
-        information.setStyleSheet("color: '#ECE5EC';" + "margin-right: 150px;")
+        information.setFont(QFont('Times', 50))
+        information.setStyleSheet("color: '#BC006C';" + "margin-right: 150px;")
 
         #Introducimos la ocupación de la biblioteca en el primer grid
         box1.addWidget(name)
         box1.addWidget(information)
-        #box1.setStyleSheet("margin-right: 150px;" + "margin-left: 160px")
+        box1.setAlignment(QtCore.Qt.AlignCenter)
 
         #Información sobre la ocupacion en el comedor
         name = QLabel("Comedor: ")
-        name.setFont(QFont('Times', 35))
+        name.setFont(QFont('Times', 75))
         name.setStyleSheet("color: '#ECE5EC';" + "margin-left: 150px;")
         information = QLabel(str(random.randint(0,200)))
-        information.setFont(QFont('Times', 35/2))
-        information.setStyleSheet("color: '#ECE5EC';" + "margin-right: 150px;")
+        information.setFont(QFont('Times', 50))
+        information.setStyleSheet("color: '#BC006C';" + "margin-right: 150px;")
 
         #Introducimos la ocupación de la biblioteca en el primer grid
         box2.addWidget(name)
         box2.addWidget(information)
-        #box2.setStyleSheet("margin-right: 150px;" + "margin-left: 160px")
+        box2.setAlignment(QtCore.Qt.AlignCenter)
 
         
         separator1 = QHSeperationLine()
-        separator1.setStyleSheet("margin-right: 150px;" + "margin-left: 160px")
+        separator1.setStyleSheet("background: '#ECE5EC';" + "color: '#ECE5EC';" + "margin-right: 150px;" + "margin-left: 160px")
         separator2 = QHSeperationLine()
-        separator2.setStyleSheet("margin-right: 150px;" + "margin-left: 160px")
+        separator2.setStyleSheet("background: '#ECE5EC';" + "color: '#ECE5EC';" + "margin-right: 150px;" + "margin-left: 160px")
 
 
 
@@ -468,9 +459,9 @@ def main():
         sys.stdin.readline()
     except KeyboardInterrupt:
         pass
-    #finally:
+    finally:
         # Remove the sample listener when done
-        # controller.remove_listener(listener)
+         controller.remove_listener(listener)
 
 
 
