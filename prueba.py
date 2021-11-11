@@ -1,11 +1,12 @@
+import random
 import sys
 import threading
-import time
 
 from PyQt5 import QtCore
+from PyQt5.QtCore import QTimer, QTime
 from PyQt5.QtGui import QPixmap, QCursor, QFont
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QHBoxLayout, QWidget, QGridLayout, \
-    QScrollArea, QDialog, QStackedWidget, QFrame, QSizePolicy
+    QDialog, QStackedWidget, QFrame, QSizePolicy
 
 import Leap
 
@@ -17,7 +18,7 @@ class QHSeperationLine(QFrame):
     super().__init__()
     self.setMinimumWidth(1)
     self.setFixedHeight(5)
-    self.setStyleSheet("background: '#ECE5EC';")
+    self.setStyleSheet("background: '#ECE5EC';" + "color: '#ECE5EC';")
     self.setFrameShape(QFrame.HLine)
     self.setFrameShadow(QFrame.Sunken)
     self.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
@@ -100,7 +101,7 @@ class MainFrame(QDialog):
         button1.clicked.connect(self.gotoScheduleFrame)
 
         #Botón de Mapa
-        button2 = QPushButton("Mapa")
+        button2 = QPushButton("Ocupación")
         button2.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
         button2.setStyleSheet(
             "*{border: 4px solid '#BC006C';" +
@@ -111,6 +112,9 @@ class MainFrame(QDialog):
             "margin: 50px 100px;}"+
             "*:hover{background: '#BC006C';}"
         )
+
+        #Conectar este botón con el frame de horario
+        button2.clicked.connect(self.gotoOcupacionFrame)
 
         #Botón de Brújula
         button3 = QPushButton("Salir")
@@ -140,6 +144,9 @@ class MainFrame(QDialog):
     """
     def gotoScheduleFrame(self):
         window.setCurrentIndex(window.currentIndex()+2)
+
+    def gotoOcupacionFrame(self):
+        window.setCurrentIndex(window.currentIndex()+3)
 
 """
 Clase que crea el frame del horario que nos muestra eventos cercanos de relevancia (clases, tutorías, etc)
@@ -190,6 +197,74 @@ class ElectionFrame(QDialog):
         logo.setStyleSheet("margin-top: 20px;")
 
         #Añadimos el logo al layout principal
+        verticalLayout.addWidget(logo)
+
+        #Enlazamos el layout principal con la clase QDialog
+        self.setLayout(verticalLayout)
+
+"""
+Clase que crea el frame que muestra la ocupación de la biblioteca y comedor
+"""
+class OcupacionFrame(QDialog):
+    def __init__(self):
+        super(OcupacionFrame, self).__init__()
+
+        # OcupacionFrame layouts
+        box1 = QHBoxLayout()
+        box2 = QHBoxLayout()
+        verticalLayout = QVBoxLayout()
+
+        #Label para el titulo
+        titulo = QLabel()
+        titulo.setText("Ocupación")
+        titulo.setAlignment(QtCore.Qt.AlignCenter)
+        titulo.setFont(QFont('Times', 95))
+        titulo.setStyleSheet("color: '#ECE5EC';")
+
+        #Información sobre la ocupacion en la biblioteca
+        name = QLabel("Biblioteca: ")
+        name.setFont(QFont('Times', 60))
+        name.setStyleSheet("color: '#ECE5EC';" + "margin-left: 150px;")
+        information = QLabel(str(random.randint(0,148)) + " / " + str(148))
+        information.setFont(QFont('Times', 30))
+        information.setStyleSheet("color: '#BC006C';" + "margin-right: 150px;")
+
+        #Introducimos la ocupación de la biblioteca en el primer grid
+        box1.addWidget(name)
+        box1.addWidget(information)
+        box1.setAlignment(QtCore.Qt.AlignCenter)
+
+        #Información sobre la ocupacion en el comedor
+        name = QLabel("Comedor: ")
+        name.setFont(QFont('Times', 60))
+        name.setStyleSheet("color: '#ECE5EC';" + "margin-left: 150px;")
+        information = QLabel(str(random.randint(0,200)) + " / " + str(200))
+        information.setFont(QFont('Times', 30))
+        information.setStyleSheet("color: '#BC006C';" + "margin-right: 150px;")
+
+        #Introducimos la ocupación de la biblioteca en el primer grid
+        box2.addWidget(name)
+        box2.addWidget(information)
+        box2.setAlignment(QtCore.Qt.AlignCenter)
+
+        separator1 = QHSeperationLine()
+        separator1.setStyleSheet("background: '#ECE5EC';" + "color: '#ECE5EC';" + "margin-right: 150px;" + "margin-left: 160px")
+        separator2 = QHSeperationLine()
+        separator2.setStyleSheet("background: '#ECE5EC';" + "color: '#ECE5EC';" + "margin-right: 150px;" + "margin-left: 160px")
+
+        #Motramos el logo de nuevo más pequeño
+        image = QPixmap("logo.png")
+        logo = QLabel()
+        logo.setPixmap(image)
+        logo.setAlignment(QtCore.Qt.AlignCenter)
+        logo.setStyleSheet("margin-top: 20px;")
+
+        #Añadimos los distintos elementos s los layouts
+        verticalLayout.addWidget(titulo)
+        verticalLayout.addWidget(separator1)
+        verticalLayout.addLayout(box1)
+        verticalLayout.addWidget(separator2)
+        verticalLayout.addLayout(box2)
         verticalLayout.addWidget(logo)
 
         #Enlazamos el layout principal con la clase QDialog
@@ -338,6 +413,9 @@ class SampleListener(Leap.Listener):
                 if (index.tip_velocity[2] < -400 and window.currentIndex() == 0 and x_finger_position > 114 and x_finger_position < 1806 and y_finger_position > 839 and y_finger_position < 976):
                     window.setCurrentIndex(window.currentIndex()+1)
 
+                if (index.tip_velocity[2] < -400 and window.currentIndex() == 0 and x_finger_position > 1069 and x_finger_position < 1807 and y_finger_position > 583 and y_finger_position < 724):
+                    window.setCurrentIndex(window.currentIndex()+3)
+
             # Si extendemos todos los dedos podemos realizar gestos
             if index.is_extended and middle.is_extended and thumb.is_extended and ring.is_extended and little.is_extended and not(window.currentIndex() == 1):
                 current_cursor.setPos(x_hand_position, y_hand_position)
@@ -346,18 +424,22 @@ class SampleListener(Leap.Listener):
 
                 #Swipe
                 if((self.timer - self.ultimoSwipe) % 157 > self.diferencia):
-                    if (hand.palm_velocity[1] < -400):
-                        contador = (contador-1) % (len(lista_images)-2)
+                    if (hand.palm_velocity[1] < -400 and contador > 0):
+                        contador = contador-1
                         schedule.changeCardView()
                         self.ultimoSwipe = self.timer
-                    elif(hand.palm_velocity[1] > 400):
-                        contador = (contador+1) % (len(lista_images)-2)
+                    elif(hand.palm_velocity[1] > 400 and contador < (len(lista_images)-3)):
+                        contador = contador+1
                         schedule.changeCardView()
                         self.ultimoSwipe = self.timer
 
-            #Gesto para volver a la pestaña anterior
+            #Gesto para volver a la pestaña anterior desde el horario
             if(is_gesturing and window.currentIndex() == 2 and not(index.is_extended) and not(middle.is_extended) and not(thumb.is_extended) and not(ring.is_extended) and not(little.is_extended)):
                 window.setCurrentIndex(window.currentIndex()-2)
+
+            #Gesto para volver a la pestaña anterior desde la ocupacion
+            if(is_gesturing and window.currentIndex() == 3 and not(index.is_extended) and not(middle.is_extended) and not(thumb.is_extended) and not(ring.is_extended) and not(little.is_extended)):
+                window.setCurrentIndex(window.currentIndex()-3)
 
             if(window.currentIndex() == 1):
                 if (handType == "Right hand"):
@@ -366,6 +448,15 @@ class SampleListener(Leap.Listener):
                             app.quit()
                             sys.exit()
                     if (direction.pitch * Leap.RAD_TO_DEG > 40 and direction.pitch * Leap.RAD_TO_DEG < 70):
+                        if index.is_extended and middle.is_extended and thumb.is_extended and ring.is_extended and little.is_extended:
+                            window.setCurrentIndex(window.currentIndex()-1)
+
+                if (handType == "Left hand"):
+                    if (normal.roll * Leap.RAD_TO_DEG > 60 and normal.roll * Leap.RAD_TO_DEG < 120):
+                        if not (index.is_extended) and not (middle.is_extended) and not (ring.is_extended) and not (little.is_extended):
+                            app.quit()
+                            sys.exit()
+                    if (direction.pitch * Leap.RAD_TO_DEG > 40 and direction.pitch * Leap.RAD_TO_DEG < 60):
                         if index.is_extended and middle.is_extended and thumb.is_extended and ring.is_extended and little.is_extended:
                             window.setCurrentIndex(window.currentIndex()-1)
 
@@ -388,7 +479,7 @@ def main():
         pass
     finally:
         # Remove the sample listener when done
-        controller.remove_listener(listener)
+         controller.remove_listener(listener)
 
 
 
@@ -411,6 +502,7 @@ download_thread.start()
 mainWindow = MainFrame()
 election = ElectionFrame()
 schedule = ScheduleFrame()
+ocupacion = OcupacionFrame()
 
 #Creamos la ventana
 window = QStackedWidget()
@@ -434,6 +526,7 @@ gesture_cursor = QCursor(cursor_scaled_pix, -1, -1)
 window.addWidget(mainWindow)
 window.addWidget(election)
 window.addWidget(schedule)
+window.addWidget(ocupacion)
 window.show()
 
 sys.exit(app.exec())
